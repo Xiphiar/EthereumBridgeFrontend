@@ -13,10 +13,43 @@ import { Redeem } from '../../blockchain-bridge/scrt';
 import { DepositRewards } from '../../blockchain-bridge/scrt';
 import ScrtTokenBalanceSingleLine from 'components/Earn/EarnRow/ScrtTokenBalanceSingleLine';
 import SpinnerDashes from 'ui/Spinner/SpinnerDashes';
+import { unlockJsx } from 'pages/Swap/utils';
 
 const MIGRATED_AMOUNT_KEY = '___sw_migrated_amount';
 
 export const Migration = observer(() => {
+  const createOldViewingKey = (a) => {
+    return unlockJsx({
+      onClick: async () => {
+        try {
+
+          //await props.userStore?.keplrWallet?.suggestToken(props.userStore?.chainId, props.tokenAddress);
+          await user.keplrWallet.suggestToken(process.env.CHAIN_ID, oldRewardsContract);
+          getAllBalances;
+          //props.userStore.refreshTokenBalanceByAddress(props.tokenAddress);
+          //props.userStore.refreshRewardsBalances('', props.tokenAddress);
+          //props.userStore.updateScrtBalance();
+        } catch (error) {
+          console.error('failed');
+        }
+      },
+    });
+
+  };
+
+  const createNewViewingKey = (a) => {
+    return unlockJsx({
+      onClick: async () => {
+        try {
+          await user.keplrWallet.suggestToken(process.env.CHAIN_ID, newRewardsContract);
+        } catch (error) {
+          console.error('failed');
+        }
+      },
+    });
+
+  };
+
   const newRewardsContract = process.env.SEFI_STAKING_CONTRACT;
   const oldRewardsContract = process.env.SEFI_STAKING_OLD_CONTRACT;
 
@@ -75,10 +108,8 @@ export const Migration = observer(() => {
   }
 
   async function getBalance(contract) {
-    const result = await user.getSnip20Balance(contract);
-    if (result === 'Unlock') {
-      return null;
-    }
+    const result = await user.getSnip20Balance(contract, 6);
+    console.log("aaa",result);
     return result;
   }
 
@@ -141,12 +172,15 @@ export const Migration = observer(() => {
   const getAllBalances = async () => {
     setLoading(true);
     const Oldbalance = await getBalance(oldRewardsContract);
-    if (!Oldbalance) return;
+    //if (!Oldbalance) return;
     const newBalance = await getBalance(newRewardsContract);
-    if (!newBalance) return;
+    console.log(Oldbalance, newBalance);
+    //if (!newBalance) return;
     setBalances({
-      oldBalance: (parseInt(Oldbalance) / 1e6).toFixed(2),
-      newBalance: (parseInt(newBalance) / 1e6).toFixed(2)
+      //oldBalance: (parseInt(Oldbalance) / 1e6).toFixed(2),
+      //newBalance: (parseInt(newBalance) / 1e6).toFixed(2)
+      oldBalance: Oldbalance,
+      newBalance: newBalance
     });
     setLoading(false);
   }
@@ -191,7 +225,15 @@ export const Migration = observer(() => {
               <h2>Step 1</h2>
               <div className="data">
                 <p>Staked in old pool: &nbsp;</p>
-                <span> {loading ? <SpinnerDashes /> : `${oldBalance} SEFI`}</span>
+                {/*<span> {loading ? <SpinnerDashes /> : `${oldBalance} SEFI`}</span>*/}
+                {loading ? <SpinnerDashes /> : <ScrtTokenBalanceSingleLine
+                  value={oldBalance}
+                  currency={"SEFI"}
+                  selected={false}
+                  balanceText={"Staked"}
+                  popupText={"Staking balance and rewards require an additional viewing key."}
+                  createKey={createOldViewingKey}
+                />}
               </div>
               <h4>Withdraw tokens from expired pools</h4>
               <WithdrawButton
@@ -206,7 +248,15 @@ export const Migration = observer(() => {
               <h2>Step 2</h2>
               <div className="data">
                 <p>Staked in new pool: &nbsp;</p>
-                <span> {loading ? <SpinnerDashes /> : `${newBalance} SEFI`}</span>
+                {/*<span> {loading ? <SpinnerDashes /> : `${newBalance} SEFI`}</span>*/}
+                {loading ? <SpinnerDashes /> : <ScrtTokenBalanceSingleLine
+                  value={newBalance}
+                  currency={"SEFI"}
+                  selected={false}
+                  balanceText={"Available"}
+                  popupText={"The new staking pool requires an additional viewing key."}
+                  createKey={createNewViewingKey}
+                />}
               </div>
               <h4>Earn rewards in new pools</h4>
               <EarnButton
